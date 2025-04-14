@@ -50,7 +50,7 @@ const UserForm = () => {
     try {
       const BACKEND_URL =
         import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
-      await axios.post(`${import.meta.env.BACKEND_URL}/api/users`, formData);
+      await axios.post(`${BACKEND_URL}/api/users`, formData);
       setMessage("User saved successfully!");
       setFormData({
         firstName: "",

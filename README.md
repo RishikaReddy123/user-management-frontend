@@ -1,1 +1,1 @@
-https://user-management-frontend-omega.vercel.app/
+https://user-management-frontend-huea2npoe.vercel.app/

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 
 const UserForm = () => {
@@ -12,6 +12,22 @@ const UserForm = () => {
 
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
+  const [users, setUsers] = useState([]);
+  const [editId, setEditId] = useState(null);
+
+  const fetchUsers = async () => {
+    try {
+      const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+      const response = await axios.get(`${BACKEND_URL}/api/users`);
+      setUsers(response.data);
+    } catch (error) {
+      setMessage("Error fetching users!");
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -50,8 +66,14 @@ const UserForm = () => {
     try {
       const BACKEND_URL =
         import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
-      await axios.post(`${BACKEND_URL}/api/users`, formData);
-      setMessage("User saved successfully!");
+      if (editId) {
+        await axios.patch(`${BACKEND_URL}/api/users/${editId}`, formData);
+        setMessage("User updated successfully!");
+      } else {
+        await axios.post(`${BACKEND_URL}/api/users`, formData);
+        setMessage("User saved successfully!");
+      }
+
       setFormData({
         firstName: "",
         lastName: "",
@@ -60,10 +82,31 @@ const UserForm = () => {
         address: "",
       });
       setErrors({});
+      setEditId(null);
+      fetchUsers();
     } catch (error) {
       setMessage(error.response?.data?.message || "Something went wrong!");
     }
   };
+
+  const handleEdit = (user) => {
+    setFormData(user);
+    setEditId(user._id);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure to delete this user?")) {
+      try {
+        const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+        await axios.delete(`${BACKEND_URL}/api/users/${id}`);
+        setMessage("User deleted successfully!");
+        fetchUsers();
+      } catch (error) {
+        setMessage("Failed to delete user!");
+      }
+    }
+  };
+
   return (
     <div className="form-wrapper">
       <h2>User Details Form</h2>
@@ -87,9 +130,36 @@ const UserForm = () => {
             </div>
           )
         )}
-        <button type="submit">Submit</button>
+        <button type="submit">{editId ? "Update" : "Submit"}</button>
         {message && <p>{message}</p>}
       </form>
+      <hr />
+      <h2>All Users</h2>
+      {users.map((user) => (
+        <div
+          key={user._id}
+          style={{
+            border: "1px solid #ccc",
+            padding: "10px",
+            margin: "10px 0",
+          }}
+        >
+          <p>
+            <strong>
+              {user.firstName} {user.lastName}
+            </strong>
+          </p>
+          <p>{user.phoneNumber}</p>
+          <p>{user.email}</p>
+          <p>{user.address}</p>
+          <button className="edit" onClick={() => handleEdit(user)}>
+            Edit
+          </button>
+          <button className="delete" onClick={() => handleDelete(user._id)}>
+            Delete
+          </button>
+        </div>
+      ))}
     </div>
   );
 };

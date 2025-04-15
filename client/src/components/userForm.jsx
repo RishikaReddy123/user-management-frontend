@@ -43,16 +43,13 @@ const UserForm = () => {
     if (!formData.firstName.trim())
       newErrors.firstName = "First name is required!";
     if (!formData.lastName.trim())
-      newErrors.lastName = "Second name is required";
-
-    const phoneRegex = /^\+?[1-9][0-9]{7,14}$/;
+      newErrors.lastName = "Last name is required!";
+    const phoneRegex = /^(\+614|04)\d{8}$/;
     if (!phoneRegex.test(formData.phoneNumber))
       newErrors.phoneNumber = "Enter a valid phone number!";
-
     const emailRegex = /^\S+@\S+\.\S+$/;
     if (!emailRegex.test(formData.email))
       newErrors.email = "Enter a valid email!";
-
     if (!formData.address.trim()) newErrors.address = "Please enter address!";
 
     setErrors(newErrors);
@@ -66,6 +63,7 @@ const UserForm = () => {
     try {
       const BACKEND_URL =
         import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
       if (editId) {
         await axios.patch(`${BACKEND_URL}/api/users/${editId}`, formData);
         setMessage("User updated successfully!");
@@ -85,7 +83,11 @@ const UserForm = () => {
       setEditId(null);
       fetchUsers();
     } catch (error) {
-      setMessage(error.response?.data?.message || "Something went wrong!");
+      if (error.response?.data?.message?.includes("already exists")) {
+        setMessage(error.response?.data?.message);
+      } else {
+        setMessage(error.response?.data?.message || "Something went wrong!");
+      }
     }
   };
 
